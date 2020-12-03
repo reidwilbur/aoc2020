@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,17 +27,15 @@ public class Day3Test {
           ".#........#",
           "#.##...#...",
           "#...##....#",
-          ".#..#...#.#"
-      );
-  
-  private static final List<Map.Entry<Integer, Integer>> slopes =
+          ".#..#...#.#");
+
+  private static final List<Day3.Slope> slopes =
       List.of(
-          Map.entry(1, 1),
-          Map.entry(3, 1),
-          Map.entry(5, 1),
-          Map.entry(7, 1),
-          Map.entry(1, 2)
-      );
+          new Day3.Slope(1, 1),
+          new Day3.Slope(3, 1),
+          new Day3.Slope(5, 1),
+          new Day3.Slope(7, 1),
+          new Day3.Slope(1, 2));
 
   @BeforeAll
   static void initAll() throws Exception {
@@ -53,14 +50,14 @@ public class Day3Test {
 
   @Test
   void test_getTreeCount() {
-    assertThat(Day3.getTreeCount(3, 1, testInput), is(7L));
+    assertThat(Day3.getTreeCount(new Day3.Slope(3, 1), testInput), is(7L));
   }
-  
+
   @Test
   void test_getTreeCount_Input1() {
-    assertThat(Day3.getTreeCount(3, 1, input1), is(178L));
+    assertThat(Day3.getTreeCount(new Day3.Slope(3, 1), input1), is(178L));
   }
-  
+
   @Test
   void test_getTreeCountMult() {
     assertThat(Day3.getTreeCountMult(slopes, testInput), is(336L));

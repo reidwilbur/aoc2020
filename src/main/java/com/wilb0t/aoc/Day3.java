@@ -1,26 +1,24 @@
 package com.wilb0t.aoc;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import org.apache.commons.math3.util.Pair;
 
 class Day3 {
 
   private static final char TREE = '#';
 
-  public static long getTreeCount(int xSlope, int ySlope, List<String> input) {
+  public record Slope(int x, int y) {}
+
+  public static long getTreeCount(Slope slope, List<String> input) {
     var width = input.get(0).length();
-    return IntStream.range(0, input.size() / ySlope)
-        .filter(idx -> input.get(idx * ySlope).charAt((idx * xSlope) % width) == TREE)
+    return IntStream.range(0, input.size() / slope.y)
+        .filter(idx -> input.get(idx * slope.y).charAt((idx * slope.x) % width) == TREE)
         .count();
   }
 
-  public static long getTreeCountMult(
-      List<Map.Entry<Integer, Integer>> slopes, List<String> input) {
+  public static long getTreeCountMult(List<Slope> slopes, List<String> input) {
     return slopes.stream()
-        .map(slope -> getTreeCount(slope.getKey(), slope.getValue(), input))
+        .map(slope -> getTreeCount(slope, input))
         .reduce((l, r) -> l * r)
         .orElseThrow();
   }
