@@ -9,35 +9,34 @@ import java.util.stream.Collectors;
 
 class Day4 {
   
-  public static record Passport(Map<String, String> fields) { 
-    private static final Map<String, Predicate<Passport>> fieldValidators =
-        Map.of(
-            "byr", 
-            (p) -> p.field("byr").matches("^19[2-9][0-9]|200[0-2]$"),
-            "iyr", 
-            (p) -> p.field("iyr").matches("^201[0-9]|2020$"),
-            "eyr", 
-            (p) -> p.field("eyr").matches("^202[0-9]|2030$"),
-            "hgt", 
-            (p) -> p.field("hgt").matches("^1[5-8][0-9]cm|19[0-3]cm|59in|6[0-9]in|7[0-6]in$"),
-            "hcl", 
-            (p) -> p.field("hcl").matches("^#[0-9a-f]{6}$"),
-            "ecl", 
-            (p) -> p.field("ecl").matches("^amb|blu|brn|gry|grn|hzl|oth$"),
-            "pid", 
-            (p) -> p.field("pid").matches("^[0-9]{9}$")
-        );
-    
-    private String field(String name) {
-      return fields.getOrDefault(name, "");
+  public static record FieldValidator(String field, Predicate<String> validator) { 
+    public boolean validate(Passport p) {
+      return validator.test(getFieldValue(p));
     }
     
+    private String getFieldValue(Passport p) {
+      return p.fields.getOrDefault(field, "");
+    }
+  }
+  
+  public static record Passport(Map<String, String> fields) {
+    private static final List<FieldValidator> validators =
+        List.of(
+            new FieldValidator("byr", fv -> fv.matches("^19[2-9][0-9]|200[0-2]$")),
+            new FieldValidator("iyr", fv -> fv.matches("^201[0-9]|2020$")),
+            new FieldValidator("eyr", fv -> fv.matches("^202[0-9]|2030$")),
+            new FieldValidator("hgt", fv -> fv.matches("^1[5-8][0-9]cm|19[0-3]cm|59in|6[0-9]in|7[0-6]in$")),
+            new FieldValidator("hcl", fv -> fv.matches("^#[0-9a-f]{6}$")),
+            new FieldValidator("ecl", fv -> fv.matches("^amb|blu|brn|gry|grn|hzl|oth$")),
+            new FieldValidator("pid", fv -> fv.matches("^[0-9]{9}$"))
+        );
+    
     public boolean hasReqFields() {
-      return fields.keySet().containsAll(fieldValidators.keySet());
+      return fields.keySet().containsAll(validators.stream().map(FieldValidator::field).collect(Collectors.toSet()));
     }
     
     public boolean isValid() {
-      return fieldValidators.values().stream().allMatch(p -> p.test(this));
+      return validators.stream().allMatch(fv -> fv.validate(this));
     }
     
     public static Passport fromString(String line) {
