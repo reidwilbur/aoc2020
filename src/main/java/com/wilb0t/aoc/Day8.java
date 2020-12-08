@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 class Day8 {
   
@@ -18,14 +20,14 @@ class Day8 {
 
     public static Instr fromString(String line) {
       var parts = line.split(" ");
-      return new Instr(Op.valueOf(parts[0].toUpperCase(Locale.ROOT)), Integer.parseInt(parts[1]));
+      return new Instr(Op.valueOf(parts[0].toUpperCase(Locale.ENGLISH)), Integer.parseInt(parts[1]));
     }
     
-    public Instr swap() {
+    public Optional<Instr> swap() {
       return switch (op) {
-        case ACC -> this;
-        case JMP -> new Instr(Op.NOP, val);
-        case NOP -> new Instr(Op.JMP, val);
+        case ACC -> Optional.empty();
+        case JMP -> Optional.of(new Instr(Op.NOP, val));
+        case NOP -> Optional.of(new Instr(Op.JMP, val));
       };
     }
   }
@@ -60,21 +62,21 @@ class Day8 {
   public static int getAccWithFix(List<String> input) {
     var instrs = input.stream().map(Instr::fromString).collect(Collectors.toList());
 
-    var changeable = Set.of(Op.JMP, Op.NOP);
-    var idxToChange = IntStream.range(0, input.size())
-        .filter(idx -> changeable.contains(instrs.get(idx).op))
+    return IntStream.range(0, input.size())
         .boxed()
-        .collect(Collectors.toList());
-    
-    for (var idx : idxToChange) {
-      var instrsSwapped = new ArrayList<>(instrs);
-      instrsSwapped.set(idx, instrsSwapped.get(idx).swap());
-      
-      var state = execAndHaltOnRepeat(instrsSwapped);
-      if (state.ip >= instrsSwapped.size()) {
-        return state.acc;
-      }
-    }
-    throw new RuntimeException("Could not find non-repeating code");
+        .flatMap(idx -> instrs.get(idx)
+            .swap()
+            .flatMap(instr -> {
+              var instrsSwapped = new ArrayList<>(instrs);
+              instrsSwapped.set(idx, instr);
+              
+              var state = execAndHaltOnRepeat(instrsSwapped);
+              return (state.ip >= instrsSwapped.size())
+                  ? Optional.of(state.acc)
+                  : Optional.empty();
+            })
+            .stream())
+        .findFirst()
+        .orElseThrow();
   }
 }
