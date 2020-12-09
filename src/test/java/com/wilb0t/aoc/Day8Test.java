@@ -15,7 +15,7 @@ public class Day8Test {
 
   private static List<String> input1;
 
-  private static List<String> testInput = 
+  private static final List<String> testInput = 
       List.of(
           "nop +0",
           "acc +1",
