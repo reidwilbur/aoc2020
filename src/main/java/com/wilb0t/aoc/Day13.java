@@ -26,11 +26,6 @@ class Day13 {
     return entry.getKey() * (entry.getValue() - time);
   }
   
-  static class SolveAcc {
-    long time;
-    long base;
-  }
-  
   public static long getTimestamp(String input) {
     var splitInput= Arrays.stream(input.split(","))
         .collect(Collectors.toList());
@@ -40,22 +35,27 @@ class Day13 {
         .filter(Predicate.not(idx -> splitInput.get(idx).equals("x")))
         .map(idx -> Map.entry(Integer.parseInt(splitInput.get(idx)), idx))
         .collect(Collectors.toList());
-    
-    long base = idOffsets.get(0).getKey();
-    long time = solve(0, base, idOffsets.get(1).getKey(), idOffsets.get(1).getValue());
-    base *= idOffsets.get(1).getKey();
-    for (int i = 2; i < idOffsets.size(); i++) {
-      time = solve(time, base, idOffsets.get(i).getKey(), idOffsets.get(i).getValue());
-      base *= idOffsets.get(i).getKey();
+
+    long timestamp = 0;
+    long windowSize = 1;
+    for (var idOffset : idOffsets) {
+      var base = idOffset.getKey();
+      var ofs = idOffset.getValue();
+      timestamp = findNextTimestampMatch(timestamp, windowSize, base, ofs);
+      windowSize *= idOffset.getKey();
     }
     
-    return time;
+    return timestamp;
   }
   
-  static long solve(long time, long base1, long base2, long ofs) {
+  static long findNextTimestampMatch(long curtime, long windowSize, long base, long ofs) {
     return LongStream.iterate(0, l -> l + 1)
-        .filter(idx -> (time + (idx * base1) + ofs) % base2 == 0)
-        .map(idx -> time + (idx * base1))
+        .flatMap(idx -> {
+          var timestamp = curtime + (idx * windowSize);
+          return ((timestamp + ofs) % base == 0)
+              ? LongStream.of(timestamp)
+              : LongStream.empty();
+        })
         .findFirst()
         .orElseThrow();
   }
