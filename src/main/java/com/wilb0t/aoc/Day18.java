@@ -13,8 +13,7 @@ class Day18 {
   }
   
   static record Number(long num, String rest) implements Token {
-    static final Pattern NUMBER =
-        Pattern.compile("^\\s*(\\d+)\\s*");
+    static final Pattern NUMBER = Pattern.compile("^\\s*(\\d+)\\s*");
     
     static Optional<Token> matches(String input) {
       var matcher = NUMBER.matcher(input);
@@ -27,11 +26,8 @@ class Day18 {
   
   static record Op(String op, String rest) implements Token {
     static final String ADD = "+";
-   
     static final String MUL = "*";
-    
-    static final Pattern OP =
-        Pattern.compile("^\\s*([*+])\\s+");
+    static final Pattern OP = Pattern.compile("^\\s*([*+])\\s+");
 
     static Optional<Token> matches(String input) {
       var matcher = OP.matcher(input);
@@ -45,11 +41,11 @@ class Day18 {
   static record SubExpr(String expr, String rest) implements Token { 
     static Optional<Token> matches(String input) {
       if (input.startsWith("(")) {
-        var stack = new ArrayDeque<>(List.of(0));
+        var stack = new ArrayDeque<>(List.of('('));
         var idx = 1;
         while (!stack.isEmpty() && idx < input.length()) {
           if (input.charAt(idx) == '(') {
-            stack.push(idx);
+            stack.push(input.charAt(idx));
           } else if (input.charAt(idx) == ')') {
             stack.pop();
           }
@@ -85,107 +81,71 @@ class Day18 {
   }
 
   public static long eval(String input) {
-    long val;
-    var leftOpt = nextToken(input);
-    if (leftOpt.isPresent()) {
-      var left = leftOpt.get();
-      if (left instanceof Number num) {
-        val = num.num;
-      } else if (left instanceof SubExpr subExpr) {
-        val = eval(subExpr.expr);
+    var leftToken = nextToken(input).orElseThrow();
+    var val = getTokenVal(leftToken);
+    var rest = leftToken.rest();
+    
+    while (!rest.isEmpty()) {
+      var opToken = nextToken(rest).orElseThrow();
+      var rightToken= nextToken(opToken.rest()).orElseThrow();
+
+      if (opToken instanceof Op op) {
+        long rightVal = getTokenVal(rightToken);
+        val = switch (op.op) {
+          case Op.MUL -> val * rightVal;
+          case Op.ADD -> val + rightVal;
+          default -> throw new RuntimeException("Invalid input" + op);
+        };
       } else {
-        throw new RuntimeException("Invalid input " + left);
+        throw new RuntimeException("Invalid input " + opToken);
       }
-      
-      var rest = left.rest();
-      while (!rest.isEmpty()) {
-        var opOpt = nextToken(rest);
-        var rightOpt = opOpt.map(Token::rest).flatMap(Day18::nextToken);
 
-        if (opOpt.isPresent() && rightOpt.isPresent()) {
-          var op = opOpt.get();
-          var right = rightOpt.get();
+      rest = rightToken.rest();
+    }
+    return val;
+  }
 
-          String opVal;
-          if (op instanceof Op opp) {
-            opVal = opp.op;
-          } else {
-            throw new RuntimeException("Invalid input " + op);
-          }
-
-          long rightVal;
-          if (right instanceof Number num) {
-            rightVal = num.num;
-          } else if (right instanceof SubExpr subExpr) {
-            rightVal = eval(subExpr.expr);
-          } else {
-            throw new RuntimeException("Invalid input " + right);
-          }
-
-          val = switch (opVal) {
-            case Op.MUL -> val * rightVal;
-            case Op.ADD -> val + rightVal;
-            default -> throw new RuntimeException("Invalid input" + op);
-          };
-
-          rest = right.rest();
-        } else {
-          throw new RuntimeException("Invalid input " + rest);
-        }
-      }
-      return val;
+  static long getTokenVal(Token token) {
+    if (token instanceof Number num) {
+      return num.num;
+    } else if (token instanceof SubExpr subExpr) {
+      return eval(subExpr.expr);
     } else {
-      throw new RuntimeException("Invalid input " + input);
+      throw new RuntimeException("Invalid input " + token);
     }
   }
-  
+
   public static long evalPlusPlus(String input) {
-    long val;
-    var leftOpt = nextToken(input);
-    if (leftOpt.isPresent()) {
-      var left = leftOpt.get();
-      if (left instanceof Number num) {
-        val = num.num;
-      } else if (left instanceof SubExpr subExpr) {
-        val = evalPlusPlus(subExpr.expr);
-      } else {
-        throw new RuntimeException("Invalid input " + left);
-      }
+    var leftToken = nextToken(input).orElseThrow();
+    long val = getTokeValPlusPlus(leftToken);
+    var rest = leftToken.rest();
+    
+    while (!rest.isEmpty()) {
+      var opToken = nextToken(rest).orElseThrow();
 
-      var rest = left.rest();
-      while (!rest.isEmpty()) {
-        var opOpt = nextToken(rest);
-
-        if (opOpt.isEmpty()) {
-          throw new RuntimeException("Invalid input " + rest);
-        }
-        
-        var token = opOpt.get();
-
-        if (token instanceof Op op) {
-          if (Op.ADD.equals(op.op)) {
-            var right = nextToken(op.rest).orElseThrow();
-            long rightVal;
-            if (right instanceof Number num) {
-              rightVal = num.num;
-            } else if (right instanceof SubExpr subExpr) {
-              rightVal = evalPlusPlus(subExpr.expr);
-            } else {
-              throw new RuntimeException("Invalid input " + right);
-            }
-            val += rightVal;
-            rest = right.rest();
-          } else {
-            val *= evalPlusPlus(op.rest);
-            rest = "";
-          }
+      if (opToken instanceof Op op) {
+        if (Op.ADD.equals(op.op)) {
+          var rightToken = nextToken(op.rest).orElseThrow();
+          val += getTokeValPlusPlus(rightToken);
+          rest = rightToken.rest();
         } else {
-          throw new RuntimeException("Invalid input " + token);
+          val *= evalPlusPlus(op.rest);
+          rest = "";
         }
+      } else {
+        throw new RuntimeException("Invalid input " + opToken);
       }
-      return val;
+    }
+    return val;
+  }
+  
+  static long getTokeValPlusPlus(Token token) {
+    if (token instanceof Number num) {
+      return num.num;
+    } else if (token instanceof SubExpr subExpr) {
+      return evalPlusPlus(subExpr.expr);
     } else {
-      throw new RuntimeException("Invalid input " + input);
+      throw new RuntimeException("Invalid input " + token);
     }
   }
 }
