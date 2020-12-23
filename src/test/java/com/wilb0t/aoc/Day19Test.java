@@ -30,12 +30,19 @@ public class Day19Test {
         "aaabbb",
         "aaaabbb "
       );
+  
+  private static List<String> testInput2;
 
   @BeforeAll
   static void initAll() throws Exception {
     input1 =
         Files.readAllLines(
             Path.of(Day19Test.class.getResource("/Day19_input1.txt").toURI()),
+            StandardCharsets.UTF_8);
+    
+    testInput2 =
+        Files.readAllLines(
+            Path.of(Day19Test.class.getResource("/Day19_inputTest.txt").toURI()),
             StandardCharsets.UTF_8);
   }
 
@@ -50,5 +57,27 @@ public class Day19Test {
   @Test
   void test_getMatchCount_input1() {
     assertThat(Day19.getMatchCount(input1, 0), is(220L));
+  }
+
+  @Test
+  void test_getMatchesPatched() {
+    assertThat(
+        Day19.getMatchesPatched(testInput2, 0), 
+        is(
+            List.of("babbbbaabbbbbabbbbbbaabaaabaaa"))
+//            List.of(
+//                "bbabbbbaabaabba",
+//                "babbbbaabbbbbabbbbbbaabaaabaaa",
+//                "aaabbbbbbaaaabaababaabababbabaaabbababababaaa",
+//                "bbbbbbbaaaabbbbaaabbabaaa",
+//                "bbbababbbbaaaaaaaabbababaaababaabab",
+//                "ababaaaaaabaaab",
+//                "ababaaaaabbbaba",
+//                "baabbaaaabbaaaababbaababb",
+//                "abbbbabbbbaaaababbbbbbaaaababb",
+//                "aaaaabbaabaaaaababaa",
+//                "aaaabbaabbaaaaaaabbbabbbaaabbaabaaa",
+//                "aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba"))
+    );
   }
 }
