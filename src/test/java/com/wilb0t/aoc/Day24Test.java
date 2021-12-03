@@ -37,4 +37,14 @@ public class Day24Test {
   void test_getBlackTileCount_puzzleInput() {
     assertThat(Day24.getBlackTileCount(puzzleInput), is(373));
   }
+  
+  @Test
+  void test_getGolTileCount_testInput() {
+    assertThat(Day24.getGolTileCount(testInput, 100), is(2208));
+  }
+
+  @Test
+  void test_getGolTileCount_puzzleInput() {
+    assertThat(Day24.getGolTileCount(puzzleInput, 100), is(3917));
+  }
 }
